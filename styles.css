@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+body {
+    background: black;
+    font-family: 'Orbitron', sans-serif;
+    color: cyan;
+    text-align: center;
+    overflow: hidden;
+}
+
+/* System Readings */
+.system-readings {
+    font-size: 20px;
+    margin: 20px auto;
+    width: 60%;
+    text-align: left;
+    border: 2px solid cyan;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px cyan;
+    background: rgba(0, 0, 0, 0.8);
+    animation: rotateHud 8s linear infinite;
+}
+
+/* Rotating Effect */
+@keyframes rotateHud {
+    0% { transform: rotateX(0deg); }
+    50% { transform: rotateX(10deg); }
+    100% { transform: rotateX(0deg); }
+}
+
+/* Chat Window */
+.ai-screen {
+    height: 400px;
+    overflow-y: auto;
+    border: 2px solid cyan;
+    padding: 10px;
+    margin: 10px auto;
+    width: 60%;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+/* Typing Bar */
+.ai-input {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.ai-input input {
+    width: 60%;
+    padding: 10px;
+    font-size: 18px;
+    background: black;
+    border: 2px solid cyan;
+    color: cyan;
+}
+
+.ai-input button {
+    background: black;
+    border: 2px solid cyan;
+    color: cyan;
+    cursor: pointer;
+    padding: 10px;
+}
+
+.ai-input button:hover {
+    background: cyan;
+    color: black;
+}
