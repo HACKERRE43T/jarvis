@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>J.A.R.V.I.S AI</title>
+    <title>GHS Nexus AI</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
 
@@ -163,13 +163,13 @@
 <body>
 
     <div id="boot-screen">
-        <h1>Initializing J.A.R.V.I.S...</h1>
+        <h1>Initializing GHS Nexus...</h1>
         <p>Loading  Little Kites,GHS Mannancherry Server Systems...</p>
         <p>Welcome, **Arjun P A** – System Activated.</p>
     </div>
 
     <div id="jarvis-container">
-        <h2>J.A.R.V.I.S AI</h2>
+        <h2>GHS Nexus AI</h2>
         <div id="status-bar">
             <span id="time"></span>
             <span id="weather">Fetching Weather...</span>
@@ -184,55 +184,84 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            setTimeout(() => {
-                document.getElementById("boot-screen").style.display = "none";
-                document.getElementById("jarvis-container").style.display = "block";
-            }, 3000);
-            updateClock();
-            getWeather();
-        });
+document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(() => {
+        document.getElementById("boot-screen").style.display = "none";
+        document.getElementById("jarvis-container").style.display = "block";
+    }, 3000);
+    updateClock();
+    getWeather();
+});
 
-        function updateClock() {
-            setInterval(() => {
-                document.getElementById("time").innerText = new Date().toLocaleTimeString();
-            }, 1000);
-        }
+function updateClock() {
+    setInterval(() => {
+        document.getElementById("time").innerText = new Date().toLocaleTimeString();
+    }, 1000);
+}
 
-        async function getWeather() {
-            const res = await fetch("https://wttr.in/?format=%C+%t");
-            const weather = await res.text();
-            document.getElementById("weather").innerText = weather;
-        }
+async function getWeather() {
+    const res = await fetch("https://wttr.in/?format=%C+%t");
+    const weather = await res.text();
+    document.getElementById("weather").innerText = weather;
+}
 
-        async function fetchAIResponse(prompt) {
-            const API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-Nemo-Instruct-2407";
-            const API_KEY = "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";
+async function fetchAIResponse(prompt) {
+    const API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-Nemo-Instruct-2407";
+    const API_KEY = "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";
 
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${API_KEY}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ inputs: prompt })
-            });
+    // Show loading message
+    const loadingMessage = `<div class="message bot-message">J.A.R.V.I.S: <i>Processing...</i></div>`;
+    document.getElementById("jarvis-screen").innerHTML += loadingMessage;
+    
+    const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ inputs: prompt })
+    });
 
-            const data = await response.json();
-            return data[0]?.generated_text || "Sorry, I didn't get that.";
-        }
+    const data = await response.json();
+    const finalResponse = data[0]?.generated_text || "Sorry, I didn't get that.";
 
-        async function sendMessage() {
-            const userInput = document.getElementById("user-input").value.trim();
-            if (!userInput) return;
+    // Replace loading message with final response
+    document.getElementById("jarvis-screen").lastChild.innerHTML = `J.A.R.V.I.S: ${finalResponse}`;
+}
 
-            document.getElementById("jarvis-screen").innerHTML += `<div class="message user-message">${userInput}</div>`;
-            document.getElementById("user-input").value = "";
+async function sendMessage() {
+    const userInput = document.getElementById("user-input").value.trim();
+    if (!userInput) return;
 
-            const botResponse = await fetchAIResponse(userInput);
-            document.getElementById("jarvis-screen").innerHTML += `<div class="message bot-message">J.A.R.V.I.S: ${botResponse}</div>`;
-        }
+    document.getElementById("jarvis-screen").innerHTML += `<div class="message user-message">${userInput}</div>`;
+    document.getElementById("user-input").value = "";
 
-        function clearChat() {
-            document.getElementById("jarvis-screen").innerHTML = "";
-        }
+    await fetchAIResponse(userInput);
+}
+
+// Speech Recognition (Voice Input)
+function startListening() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+        document.getElementById("user-input").placeholder = "Listening...";
+    };
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById("user-input").value = transcript;
+        sendMessage(); // Automatically send the message after recognition
+    };
+
+    recognition.onerror = () => {
+        document.getElementById("user-input").placeholder = "Voice input failed. Try again.";
+    };
+
+    recognition.start();
+}
+
+function clearChat() {
+    document.getElementById("jarvis-screen").innerHTML = "";
+}
+
     </script>
 
 </body>
