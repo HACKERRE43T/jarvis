@@ -125,6 +125,7 @@
             background: rgba(0, 255, 255, 0.2);
         }
 
+        /* J.A.R.V.I.S Buttons */
         .jarvis-button {
             margin-left: 10px;
             padding: 12px 16px;
@@ -145,32 +146,143 @@
             color: black;
             box-shadow: 0 0 20px cyan;
         }
+
+        /* Glowing Animation */
+        @keyframes neonGlow {
+            0% { box-shadow: 0 0 10px cyan; }
+            50% { box-shadow: 0 0 20px cyan; }
+            100% { box-shadow: 0 0 10px cyan; }
+        }
+
+        input[type="text"], .jarvis-button {
+            animation: neonGlow 1.5s infinite alternate;
+        }
+
     </style>
 </head>
 <body>
+
+    <div id="boot-screen">
+        <h1>Initializing GHS 34044 A.I...</h1>
+        <p>Loading Little Kites, GHS Mannancherry Server Systems...</p>
+        <p>Welcome, **Arjun P A** – System Activated.</p>
+    </div>
+
+    <div id="jarvis-container">
+        <h2>GHS 34044 AI</h2>
+        <div id="status-bar">
+            <span id="time"></span>
+            <span id="weather">Fetching Weather...</span>
+        </div>
+        <div id="jarvis-screen"></div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Awaiting command...">
+            <button class="jarvis-button" onclick="sendMessage()">Send</button>
+            <button class="jarvis-button" onclick="startListening()">🎤 Voice</button>
+            <button class="jarvis-button" onclick="clearChat()">🗑️ Clear</button>
+        </div>
+    </div>
+
     <script>
-async function fetchAIResponse(prompt) {
-    const API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-Nemo-Instruct-2407";
-    const API_KEY = "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";
-    
-    const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ inputs: prompt })
-    });
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(() => {
+                document.getElementById("boot-screen").style.display = "none";
+                document.getElementById("jarvis-container").style.display = "block";
+            }, 3000);
+            updateClock();
+            getWeather();
+        });
 
-    const data = await response.json();
-    const finalResponse = data[0]?.generated_text || "Sorry, I didn't get that.";
-    
-    document.getElementById("jarvis-screen").innerHTML += `<div class="message bot-message">GHS 34044: ${finalResponse}</div>`;
-    speakResponse(finalResponse);
-}
+        function updateClock() {
+            setInterval(() => {
+                document.getElementById("time").innerText = new Date().toLocaleTimeString();
+            }, 1000);
+        }
 
-function speakResponse(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'hi-IN';
-    window.speechSynthesis.speak(utterance);
-}
+        async function getWeather() {
+            const res = await fetch("https://wttr.in/?format=%C+%t");
+            const weather = await res.text();
+            document.getElementById("weather").innerText = weather;
+        }
+
+        // Function to speak text
+        function speakText(text) {
+            const synth = window.speechSynthesis;
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            // Try to find an Indian voice
+            const voices = synth.getVoices();
+            const indianVoice = voices.find(voice => voice.lang === "en-IN" || voice.name.includes("India"));
+
+            if (indianVoice) {
+                utterance.voice = indianVoice; // Set the Indian voice if available
+            } else {
+                utterance.voice = voices.find(voice => voice.lang === "en-US"); // Fallback to a US voice
+            }
+
+            synth.speak(utterance);
+        }
+
+        async function fetchAIResponse(prompt) {
+            const API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-Nemo-Instruct-2407";
+            const API_KEY = "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";
+
+            // Show loading message
+            const loadingMessage = `<div class="message bot-message">GHS 34044: <i>Processing...</i></div>`;
+            document.getElementById("jarvis-screen").innerHTML += loadingMessage;
+
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${API_KEY}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ inputs: prompt })
+            });
+
+            const data = await response.json();
+            const finalResponse = data[0]?.generated_text || "Sorry, I didn't get that.";
+
+            // Replace loading message with final response
+            document.getElementById("jarvis-screen").lastChild.innerHTML = `GHS 34044: ${finalResponse}`;
+
+            // Speak the response
+            speakText(finalResponse);
+        }
+
+        async function sendMessage() {
+            const userInput = document.getElementById("user-input").value.trim();
+            if (!userInput) return;
+
+            document.getElementById("jarvis-screen").innerHTML += `<div class="message user-message">${userInput}</div>`;
+            document.getElementById("user-input").value = "";
+
+            await fetchAIResponse(userInput);
+        }
+
+        // Speech Recognition (Voice Input)
+        function startListening() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = "en-US";
+
+            recognition.onstart = () => {
+                document.getElementById("user-input").placeholder = "Listening...";
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById("user-input").value = transcript;
+                sendMessage(); // Automatically send the message after recognition
+            };
+
+            recognition.onerror = () => {
+                document.getElementById("user-input").placeholder = "Voice input failed. Try again.";
+            };
+
+            recognition.start();
+        }
+
+        function clearChat() {
+            document.getElementById("jarvis-screen").innerHTML = "";
+        }
     </script>
+
 </body>
 </html>
